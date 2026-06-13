@@ -1,0 +1,5 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Relay to the Sylphx org-wide preset. Org-specific overrides go here; base policy lives in SylphxAI/renovate-config (SSOT, Doctrine ADR-6).",
+  "extends": ["github>SylphxAI/renovate-config"]
+}
