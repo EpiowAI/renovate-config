@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "repo": "EpiowAI/renovate-config",
+    "name": "EpiowAI Renovate Config",
+    "lifecycle": "production",
+    "layer": "tooling",
+    "summary": "EpiowAI organization Renovate relay preset that extends the Sylphx org-wide dependency-update policy.",
+    "goals": [
+      "Expose a stable Renovate preset entry point for EpiowAI repositories.",
+      "Extend SylphxAI/renovate-config as the base dependency-update policy.",
+      "Contain only EpiowAI-specific Renovate overrides in default.json."
+    ],
+    "nonGoals": [
+      "Own the base Renovate policy shared across the wider Sylphx ecosystem.",
+      "Own application dependency decisions inside individual EpiowAI product repositories.",
+      "Own enterprise engineering doctrine, standards, or manifest schema."
+    ]
+  },
+  "boundaries": {
+    "owns": [
+      {
+        "name": "epiowai-renovate-relay-preset",
+        "description": "The EpiowAI organization Renovate preset relay and any EpiowAI-specific override rules in default.json."
+      }
+    ],
+    "doesNotOwn": [
+      "Base dependency-update policy owned by SylphxAI/renovate-config.",
+      "Product-specific dependency exceptions owned by each product repository.",
+      "Enterprise doctrine and manifest schema owned by SylphxAI/doctrine."
+    ],
+    "publicSurfaces": [
+      {
+        "type": "manifest",
+        "name": "Renovate default preset",
+        "location": "default.json"
+      },
+      {
+        "type": "documentation",
+        "name": "Repository README",
+        "location": "README.md"
+      }
+    ],
+    "allowedDependencies": [
+      {
+        "repo": "SylphxAI/renovate-config",
+        "surface": "Renovate base preset",
+        "direction": "peer-public"
+      },
+      {
+        "repo": "SylphxAI/doctrine",
+        "surface": "project manifest schema and engineering doctrine",
+        "direction": "peer-public"
+      }
+    ],
+    "forbiddenCouplings": [
+      "Do not duplicate base Renovate policy that belongs in SylphxAI/renovate-config.",
+      "Do not encode product-specific dependency exceptions here.",
+      "Do not fork doctrine standards into this repository."
+    ]
+  },
+  "documentation": {
+    "adr": {
+      "path": "docs/adr/",
+      "status": "planned"
+    },
+    "specs": {
+      "path": "docs/specs/",
+      "status": "not-applicable"
+    },
+    "catalog": {
+      "path": ".doctrine/project.json",
+      "status": "present"
+    },
+    "runbooks": {
+      "path": "docs/runbooks/",
+      "status": "not-applicable"
+    },
+    "generatedReferences": {
+      "path": "README.md",
+      "status": "present"
+    }
+  },
+  "delivery": {
+    "ciModel": "none",
+    "requiredContexts": [],
+    "deployPath": "not-applicable: Renovate resolves default.json from GitHub after merge to main.",
+    "productionProof": "JSON validation, GitHub main readback, doctrine project-control audit, and downstream Renovate runs in consuming repositories.",
+    "recoveryClass": "source-revertable"
+  },
+  "adoption": {
+    "status": "baseline",
+    "gaps": [
+      {
+        "id": "renovate-config-validation-gate",
+        "description": "No repository-local CI currently validates the Renovate preset against Renovate's schema or central doctrine conformance.",
+        "owner": "EpiowAI/renovate-config",
+        "target": "Adopt a Renovate preset validation gate after baseline manifest rollout."
+      }
+    ]
+  }
+}
