@@ -13,6 +13,12 @@ jobs:
     runs-on: sylphx-linux-standard
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check chat senders
+        uses: SylphxAI/.github/.github/actions/chat-senders@5cfd55a41435cca8e4b7caf6506faf04ca08d200
+        with:
+          mode: fail
       - name: Verify static owned runner profiles
         env:
           REPO_PRIVATE: ${{ github.event.repository.private }}
