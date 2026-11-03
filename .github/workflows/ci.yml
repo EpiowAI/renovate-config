@@ -10,7 +10,7 @@ permissions:
   contents: read
 jobs:
   validate:
-    runs-on: sylphx-linux-standard
+    runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
     steps:
       - uses: actions/checkout@v4
         with:

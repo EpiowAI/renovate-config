@@ -28,7 +28,13 @@ root = Path(sys.argv[1])
 workflow_dir = root / ".github" / "workflows"
 
 selection = re.compile(r"^\s*runs-on\s*:\s*(?P<value>.*?)(?:\s+#.*)?$")
-owned = re.compile(r"^sylphx-linux-(?:standard|large|xlarge|2xlarge)$")
+owned = re.compile(r"^sylphx-linux-(?:(?:standard|large|xlarge)(?:-merge)?|2xlarge)$")
+# Only this event selector can choose a reserved merge pool. Both branches
+# must retain the same published runner size; arbitrary expressions fail.
+merge_selector = re.compile(
+    r"^\$\{\{ github\.event_name == 'merge_group' && "
+    r"'(sylphx-linux-(?:standard|large|xlarge))-merge' \|\| '\1' \}\}$"
+)
 owned_macos_array = re.compile(
     r"^\[\s*self-hosted\s*,\s*sylphx\s*,\s*macos\s*,\s*(?:nano|small|standard|large|xlarge|2xlarge)\s*\]$"
 )
@@ -42,8 +48,10 @@ private = (raw_private or "").strip().lower() != "false"
 
 def reason_for(value, is_private):
     """The violation for one `runs-on` value, or None when it is allowed."""
+    if merge_selector.fullmatch(value):
+        return None
     if "${{" in value:
-        return "dynamic runner selection"
+        return "dynamic runner selection other than the same-size merge-group selector"
     if owned_macos_array.fullmatch(value):
         return None
     if label_list.match(value):
@@ -89,6 +97,18 @@ def self_test():
         ("private + retired Linux list", "[self-hosted, sylphx-linux-standard]", True, True),
         ("self-hosted label list", "[self-hosted, sylphx-linux-standard]", False, True),
         ("unowned macOS list", "[self-hosted, sylphx, macos, huge]", False, True),
+        ("private + standard merge pool", "sylphx-linux-standard-merge", True, False),
+        ("private + large merge pool", "sylphx-linux-large-merge", True, False),
+        ("private + xlarge merge pool", "sylphx-linux-xlarge-merge", True, False),
+        ("unpublished merge pool", "sylphx-linux-2xlarge-merge", True, True),
+        ("private + standard merge selector", "${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}", True, False),
+        ("public + large merge selector", "${{ github.event_name == 'merge_group' && 'sylphx-linux-large-merge' || 'sylphx-linux-large' }}", False, False),
+        ("private + xlarge merge selector", "${{ github.event_name == 'merge_group' && 'sylphx-linux-xlarge-merge' || 'sylphx-linux-xlarge' }}", True, False),
+        ("mismatched selector sizes", "${{ github.event_name == 'merge_group' && 'sylphx-linux-large-merge' || 'sylphx-linux-standard' }}", True, True),
+        ("wrong event", "${{ github.event_name == 'pull_request' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}", False, True),
+        ("hosted fallback", "${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'ubuntu-latest' }}", False, True),
+        ("unknown merge size", "${{ github.event_name == 'merge_group' && 'sylphx-linux-huge-merge' || 'sylphx-linux-huge' }}", True, True),
+        ("reversed merge selector", "${{ github.event_name == 'merge_group' && 'sylphx-linux-standard' || 'sylphx-linux-standard-merge' }}", False, True),
         ("dynamic selection", "${{ matrix.runner }}", False, True),
         ("unknown label", "custom-runner-group", False, True),
     )
